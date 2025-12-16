@@ -18,6 +18,7 @@ on:
     workflows: [CI]
     types: [completed]
     branches: [main]
+  workflow_dispatch:
 jobs:
   Keepalive:
     uses: hypothesis/workflows/.github/workflows/keepalive.yml@main
