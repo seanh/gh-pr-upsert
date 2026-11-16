@@ -1,5 +1,6 @@
 from subprocess import CalledProcessError
-from unittest.mock import call, sentinel
+from unittest.mock import call
+from unittest.mock import sentinel as sentinel_
 
 import pytest
 
@@ -20,27 +21,27 @@ from gh_pr_upsert.git import (
 class TestCommit:
     def test_get(self, run):
         run.side_effect = [
-            sentinel.full_sha,
-            sentinel.author_name,
-            sentinel.author_email,
-            sentinel.committer_name,
-            sentinel.committer_email,
+            sentinel_.full_sha,
+            sentinel_.author_name,
+            sentinel_.author_email,
+            sentinel_.committer_name,
+            sentinel_.committer_email,
         ]
 
-        commit = Commit.get(sentinel.sha)
+        commit = Commit.get(sentinel_.sha)
 
         assert run.call_args_list == [
-            call(["git", "show", "--no-patch", "--format=%H", sentinel.sha]),
-            call(["git", "show", "--no-patch", "--format=%an", sentinel.sha]),
-            call(["git", "show", "--no-patch", "--format=%ae", sentinel.sha]),
-            call(["git", "show", "--no-patch", "--format=%cn", sentinel.sha]),
-            call(["git", "show", "--no-patch", "--format=%ce", sentinel.sha]),
+            call(["git", "show", "--no-patch", "--format=%H", sentinel_.sha]),
+            call(["git", "show", "--no-patch", "--format=%an", sentinel_.sha]),
+            call(["git", "show", "--no-patch", "--format=%ae", sentinel_.sha]),
+            call(["git", "show", "--no-patch", "--format=%cn", sentinel_.sha]),
+            call(["git", "show", "--no-patch", "--format=%ce", sentinel_.sha]),
         ]
         assert commit == Commit(
-            sha=sentinel.full_sha,
-            author=User(name=sentinel.author_name, email=sentinel.author_email),
+            sha=sentinel_.full_sha,
+            author=User(name=sentinel_.author_name, email=sentinel_.author_email),
             committer=User(
-                name=sentinel.committer_name, email=sentinel.committer_email
+                name=sentinel_.committer_name, email=sentinel_.committer_email
             ),
         )
 
@@ -49,18 +50,18 @@ class TestGitHubRepo:
     def test_get(self, run):
         # The JSON returned by `gh repo view`.
         json = {
-            "name": sentinel.repo_name,
-            "nameWithOwner": sentinel.repo_name_with_owner,
-            "url": sentinel.repo_url,
-            "owner": {"login": sentinel.owner_login},
-            "defaultBranchRef": {"name": sentinel.default_branch_name},
+            "name": sentinel_.repo_name,
+            "nameWithOwner": sentinel_.repo_name_with_owner,
+            "url": sentinel_.repo_url,
+            "owner": {"login": sentinel_.owner_login},
+            "defaultBranchRef": {"name": sentinel_.default_branch_name},
         }
-        run.side_effect = [sentinel.remote_url, json]
+        run.side_effect = [sentinel_.remote_url, json]
 
-        repo = GitHubRepo.get(sentinel.remote)
+        repo = GitHubRepo.get(sentinel_.remote)
 
         assert run.call_args_list == [
-            call(["git", "remote", "get-url", sentinel.remote]),
+            call(["git", "remote", "get-url", sentinel_.remote]),
             call(
                 [
                     "gh",
@@ -68,18 +69,18 @@ class TestGitHubRepo:
                     "view",
                     "--json",
                     "owner,name,nameWithOwner,defaultBranchRef,url",
-                    sentinel.remote_url,
+                    sentinel_.remote_url,
                 ],
                 json=True,
             ),
         ]
         assert repo == GitHubRepo(
-            remote=sentinel.remote,
-            owner=sentinel.owner_login,
-            name=sentinel.repo_name,
-            name_with_owner=sentinel.repo_name_with_owner,
-            default_branch=sentinel.default_branch_name,
-            url=sentinel.repo_url,
+            remote=sentinel_.remote,
+            owner=sentinel_.owner_login,
+            name=sentinel_.repo_name,
+            name_with_owner=sentinel_.repo_name_with_owner,
+            default_branch=sentinel_.default_branch_name,
+            url=sentinel_.repo_url,
             json=json,
         )
 
@@ -87,15 +88,15 @@ class TestGitHubRepo:
 class TestPullRequest:
     def test_from_json(self, json):
         pull_request = PullRequest.from_json(
-            sentinel.base_repo, sentinel.head_repo, sentinel.head_branch, json
+            sentinel_.base_repo, sentinel_.head_repo, sentinel_.head_branch, json
         )
 
         assert pull_request == PullRequest(
-            base_repo=sentinel.base_repo,
-            head_repo=sentinel.head_repo,
-            head_branch=sentinel.head_branch,
-            number=sentinel.number,
-            html_url=sentinel.html_url,
+            base_repo=sentinel_.base_repo,
+            head_repo=sentinel_.head_repo,
+            head_branch=sentinel_.head_branch,
+            number=sentinel_.number,
+            html_url=sentinel_.html_url,
             json=json,
         )
 
@@ -104,11 +105,11 @@ class TestPullRequest:
 
         pull_request = PullRequest.create(
             base_repo,
-            sentinel.base_branch,
+            sentinel_.base_branch,
             head_repo,
-            sentinel.head_branch,
-            sentinel.title,
-            sentinel.body,
+            sentinel_.head_branch,
+            sentinel_.title,
+            sentinel_.body,
         )
 
         run.assert_called_once_with(
@@ -121,22 +122,22 @@ class TestPullRequest:
                 "POST",
                 f"/repos/{base_repo.owner}/{base_repo.name}/pulls",
                 "-f",
-                f"base={sentinel.base_branch}",
+                f"base={sentinel_.base_branch}",
                 "-f",
-                f"head={head_repo.owner}:{sentinel.head_branch}",
+                f"head={head_repo.owner}:{sentinel_.head_branch}",
                 "-f",
-                f"title={sentinel.title}",
+                f"title={sentinel_.title}",
                 "-f",
-                f"body={sentinel.body}",
+                f"body={sentinel_.body}",
             ],
             json=True,
         )
         assert pull_request == PullRequest(
             base_repo=base_repo,
             head_repo=head_repo,
-            head_branch=sentinel.head_branch,
-            number=sentinel.number,
-            html_url=sentinel.html_url,
+            head_branch=sentinel_.head_branch,
+            number=sentinel_.number,
+            html_url=sentinel_.html_url,
             json=json,
         )
 
@@ -144,7 +145,7 @@ class TestPullRequest:
         run.return_value = [json]
 
         pull_request = PullRequest.get(
-            base_repo, sentinel.base_branch, head_repo, sentinel.head_branch
+            base_repo, sentinel_.base_branch, head_repo, sentinel_.head_branch
         )
 
         run.assert_called_once_with(
@@ -158,9 +159,9 @@ class TestPullRequest:
                 "GET",
                 f"/repos/{base_repo.owner}/{base_repo.name}/pulls",
                 "-f",
-                f"base={sentinel.base_branch}",
+                f"base={sentinel_.base_branch}",
                 "-f",
-                f"head={head_repo.owner}:{sentinel.head_branch}",
+                f"head={head_repo.owner}:{sentinel_.head_branch}",
                 "-f",
                 "state=open",
             ],
@@ -169,9 +170,9 @@ class TestPullRequest:
         assert pull_request == PullRequest(
             base_repo=base_repo,
             head_repo=head_repo,
-            head_branch=sentinel.head_branch,
-            number=sentinel.number,
-            html_url=sentinel.html_url,
+            head_branch=sentinel_.head_branch,
+            number=sentinel_.number,
+            html_url=sentinel_.html_url,
             json=json,
         )
 
@@ -181,7 +182,7 @@ class TestPullRequest:
         run.return_value = None
 
         assert not PullRequest.get(
-            base_repo, sentinel.base_branch, head_repo, sentinel.head_branch
+            base_repo, sentinel_.base_branch, head_repo, sentinel_.head_branch
         )
 
     def test_get_raises_if_there_are_multiple_matching_prs(
@@ -197,17 +198,17 @@ class TestPullRequest:
                 2,
                 base_repo=base_repo,
                 head_repo=head_repo,
-                head_branch=sentinel.head_branch,
+                head_branch=sentinel_.head_branch,
             )
         ]
 
         with pytest.raises(AssertionError):
             PullRequest.get(
-                base_repo, sentinel.base_branch, head_repo, sentinel.head_branch
+                base_repo, sentinel_.base_branch, head_repo, sentinel_.head_branch
             )
 
     def test_close(self, pull_request, run):
-        pull_request.close(sentinel.comment)
+        pull_request.close(sentinel_.comment)
 
         run.assert_called_once_with(
             [
@@ -218,7 +219,7 @@ class TestPullRequest:
                 pull_request.base_repo.name_with_owner,
                 "--delete-branch",
                 "--comment",
-                sentinel.comment,
+                sentinel_.comment,
                 str(pull_request.number),
             ]
         )
@@ -226,7 +227,7 @@ class TestPullRequest:
     @pytest.fixture
     def json(self):
         """Return a JSON representation of a pull request as from the GitHub API."""
-        return {"number": sentinel.number, "html_url": sentinel.html_url}
+        return {"number": sentinel_.number, "html_url": sentinel_.html_url}
 
 
 class TestBranchExists:
@@ -239,12 +240,12 @@ class TestBranchExists:
         assert exists
 
     def test_it_returns_False_if_the_branch_doesnt_exist(self, run):
-        run.side_effect = CalledProcessError(returncode=1, cmd=sentinel.cmd)
+        run.side_effect = CalledProcessError(returncode=1, cmd=sentinel_.cmd)
 
         assert not branch_exists("origin", "my-branch")
 
     def test_it_raises_if_it_gets_an_unexpected_exit_code_from_git(self, run):
-        run.side_effect = CalledProcessError(returncode=2, cmd=sentinel.cmd)
+        run.side_effect = CalledProcessError(returncode=2, cmd=sentinel_.cmd)
 
         with pytest.raises(CalledProcessError) as exc_info:
             branch_exists("origin", "my-branch")
@@ -275,10 +276,10 @@ class TestCurrentBranch:
 
 class TestDiff:
     def test_it(self, run):
-        returned = diff((sentinel.branch_1, sentinel.branch_2))
+        returned = diff((sentinel_.branch_1, sentinel_.branch_2))
 
         run.assert_called_once_with(
-            ["git", "diff", sentinel.branch_1, sentinel.branch_2]
+            ["git", "diff", sentinel_.branch_1, sentinel_.branch_2]
         )
         assert returned == run.return_value
 
@@ -288,15 +289,15 @@ class TestLog:
         get.side_effect = commits = commit_factory.create_batch(2)
         run.return_value = "\n".join((commit.sha for commit in commits))
 
-        returned = log((sentinel.branch_1, sentinel.branch_2))
+        returned = log((sentinel_.branch_1, sentinel_.branch_2))
 
         run.assert_called_once_with(
             [
                 "git",
                 "log",
                 "--ignore-missing",
-                sentinel.branch_1,
-                sentinel.branch_2,
+                sentinel_.branch_1,
+                sentinel_.branch_2,
                 "--format=%H",
             ]
         )
@@ -310,15 +311,15 @@ class TestLog:
 
 class TestPush:
     def test_it(self, run):
-        push(sentinel.remote, sentinel.local_branch, sentinel.remote_branch)
+        push(sentinel_.remote, sentinel_.local_branch, sentinel_.remote_branch)
 
         run.assert_called_once_with(
             [
                 "git",
                 "push",
                 "--force-with-lease",
-                sentinel.remote,
-                f"{sentinel.local_branch}:{sentinel.remote_branch}",
+                sentinel_.remote,
+                f"{sentinel_.local_branch}:{sentinel_.remote_branch}",
             ]
         )
 
