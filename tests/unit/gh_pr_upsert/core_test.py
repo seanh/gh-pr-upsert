@@ -1,4 +1,5 @@
-from unittest.mock import call, sentinel
+from unittest.mock import call
+from unittest.mock import sentinel as sentinel_
 
 import pytest
 
@@ -10,21 +11,21 @@ class TestPRUpsert:
     def test_it(self, base_repo, capsys, git, head_repo):
         core.pr_upsert(
             base_repo,
-            sentinel.base_branch,
-            sentinel.local_branch,
+            sentinel_.base_branch,
+            sentinel_.local_branch,
             head_repo,
-            sentinel.head_branch,
-            sentinel.title,
-            sentinel.body,
-            sentinel.close_comment,
+            sentinel_.head_branch,
+            sentinel_.title,
+            sentinel_.body,
+            sentinel_.close_comment,
         )
 
         # It gets the list of commits on the remote branch compared to the local branch.
         git.log.assert_called_once_with(
             (
-                f"{head_repo.remote}/{sentinel.head_branch}",
-                f"^{sentinel.local_branch}",
-                f"^{base_repo.remote}/{sentinel.base_branch}",
+                f"{head_repo.remote}/{sentinel_.head_branch}",
+                f"^{sentinel_.local_branch}",
+                f"^{base_repo.remote}/{sentinel_.base_branch}",
             )
         )
 
@@ -32,27 +33,27 @@ class TestPRUpsert:
             # It gets the diff of the local branch.
             call(
                 (
-                    sentinel.local_branch,
-                    f"^{base_repo.remote}/{sentinel.base_branch}",
+                    sentinel_.local_branch,
+                    f"^{base_repo.remote}/{sentinel_.base_branch}",
                 )
             ),
             # It gets the diff of the remote branch.
             call(
                 (
-                    f"{head_repo.remote}/{sentinel.head_branch}",
-                    f"^{base_repo.remote}/{sentinel.base_branch}",
+                    f"{head_repo.remote}/{sentinel_.head_branch}",
+                    f"^{base_repo.remote}/{sentinel_.base_branch}",
                 )
             ),
         ]
 
         # It gets the existing PR.
         git.PullRequest.get.assert_called_once_with(
-            base_repo, sentinel.base_branch, head_repo, sentinel.head_branch
+            base_repo, sentinel_.base_branch, head_repo, sentinel_.head_branch
         )
 
         # It checks whether the remote branch exists.
         git.branch_exists.assert_called_once_with(
-            head_repo.remote, sentinel.head_branch
+            head_repo.remote, sentinel_.head_branch
         )
 
         # It does not call `git push` because the local and remote diffs are the same.
@@ -73,13 +74,13 @@ class TestPRUpsert:
         with pytest.raises(SameBranchError):
             core.pr_upsert(
                 git_hub_repo,
-                sentinel.remote_branch,
-                sentinel.local_branch,
+                sentinel_.remote_branch,
+                sentinel_.local_branch,
                 git_hub_repo,
-                sentinel.remote_branch,
-                sentinel.title,
-                sentinel.body,
-                sentinel.close_comment,
+                sentinel_.remote_branch,
+                sentinel_.title,
+                sentinel_.body,
+                sentinel_.close_comment,
             )
 
     def test_if_there_are_no_changes_it_closes_any_existing_pr(
@@ -90,17 +91,17 @@ class TestPRUpsert:
         with pytest.raises(NoChangesError):
             core.pr_upsert(
                 base_repo,
-                sentinel.base_branch,
-                sentinel.local_branch,
+                sentinel_.base_branch,
+                sentinel_.local_branch,
                 head_repo,
-                sentinel.head_branch,
-                sentinel.title,
-                sentinel.body,
-                sentinel.close_comment,
+                sentinel_.head_branch,
+                sentinel_.title,
+                sentinel_.body,
+                sentinel_.close_comment,
             )
 
         git.PullRequest.get.return_value.close.assert_called_once_with(
-            sentinel.close_comment
+            sentinel_.close_comment
         )
 
     def test_it_doesnt_close_prs_that_have_other_contributors(
@@ -112,13 +113,13 @@ class TestPRUpsert:
         with pytest.raises(NoChangesError):
             core.pr_upsert(
                 base_repo,
-                sentinel.base_branch,
-                sentinel.local_branch,
+                sentinel_.base_branch,
+                sentinel_.local_branch,
                 head_repo,
-                sentinel.head_branch,
-                sentinel.title,
-                sentinel.body,
-                sentinel.close_comment,
+                sentinel_.head_branch,
+                sentinel_.title,
+                sentinel_.body,
+                sentinel_.close_comment,
             )
 
         git.PullRequest.get.return_value.close.assert_not_called()
@@ -130,55 +131,55 @@ class TestPRUpsert:
 
         core.pr_upsert(
             base_repo,
-            sentinel.base_branch,
-            sentinel.local_branch,
+            sentinel_.base_branch,
+            sentinel_.local_branch,
             head_repo,
-            sentinel.head_branch,
-            sentinel.title,
-            sentinel.body,
-            sentinel.close_comment,
+            sentinel_.head_branch,
+            sentinel_.title,
+            sentinel_.body,
+            sentinel_.close_comment,
         )
 
         git.push.assert_called_once_with(
-            head_repo.remote, sentinel.local_branch, sentinel.head_branch
+            head_repo.remote, sentinel_.local_branch, sentinel_.head_branch
         )
 
     def test_if_the_remote_branch_already_exists_it_updates_it(
         self, base_repo, head_repo, git
     ):
-        git.diff.side_effect = [sentinel.local_diff, sentinel.remote_diff]
+        git.diff.side_effect = [sentinel_.local_diff, sentinel_.remote_diff]
 
         core.pr_upsert(
             base_repo,
-            sentinel.base_branch,
-            sentinel.local_branch,
+            sentinel_.base_branch,
+            sentinel_.local_branch,
             head_repo,
-            sentinel.head_branch,
-            sentinel.title,
-            sentinel.body,
-            sentinel.close_comment,
+            sentinel_.head_branch,
+            sentinel_.title,
+            sentinel_.body,
+            sentinel_.close_comment,
         )
 
         git.push.assert_called_once_with(
-            head_repo.remote, sentinel.local_branch, sentinel.head_branch
+            head_repo.remote, sentinel_.local_branch, sentinel_.head_branch
         )
 
     def test_it_doesnt_push_the_remote_branch_if_there_are_other_contributors(
         self, base_repo, head_repo, commit_factory, git
     ):
-        git.diff.side_effect = [sentinel.local_diff, sentinel.remote_diff]
+        git.diff.side_effect = [sentinel_.local_diff, sentinel_.remote_diff]
         git.log.return_value.append(commit_factory())
 
         with pytest.raises(OtherPeopleError):
             core.pr_upsert(
                 base_repo,
-                sentinel.base_branch,
-                sentinel.local_branch,
+                sentinel_.base_branch,
+                sentinel_.local_branch,
                 head_repo,
-                sentinel.head_branch,
-                sentinel.title,
-                sentinel.body,
-                sentinel.close_comment,
+                sentinel_.head_branch,
+                sentinel_.title,
+                sentinel_.body,
+                sentinel_.close_comment,
             )
 
         git.push.assert_not_called()
@@ -188,22 +189,22 @@ class TestPRUpsert:
 
         core.pr_upsert(
             base_repo,
-            sentinel.base_branch,
-            sentinel.local_branch,
+            sentinel_.base_branch,
+            sentinel_.local_branch,
             head_repo,
-            sentinel.head_branch,
-            sentinel.title,
-            sentinel.body,
-            sentinel.close_comment,
+            sentinel_.head_branch,
+            sentinel_.title,
+            sentinel_.body,
+            sentinel_.close_comment,
         )
 
         git.PullRequest.create.assert_called_once_with(
             base_repo,
-            sentinel.base_branch,
+            sentinel_.base_branch,
             head_repo,
-            sentinel.head_branch,
-            sentinel.title,
-            sentinel.body,
+            sentinel_.head_branch,
+            sentinel_.title,
+            sentinel_.body,
         )
 
     @pytest.fixture(autouse=True)

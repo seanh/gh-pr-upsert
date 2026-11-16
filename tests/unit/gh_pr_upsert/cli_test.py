@@ -1,6 +1,7 @@
 from importlib.metadata import version
 from subprocess import CalledProcessError
-from unittest.mock import call, sentinel
+from unittest.mock import call
+from unittest.mock import sentinel as sentinel_
 
 import pytest
 
@@ -89,7 +90,7 @@ def test_PRUpsertError(capsys, core):
 
 
 def test_CalledProcessError(core):
-    error = core.pr_upsert.side_effect = CalledProcessError(23, sentinel.cmd)
+    error = core.pr_upsert.side_effect = CalledProcessError(23, sentinel_.cmd)
 
     with pytest.raises(CalledProcessError) as exc_info:
         cli([])
@@ -99,7 +100,7 @@ def test_CalledProcessError(core):
 
 def test_it_prints_stdout_and_stderr_from_CalledProcessErrors(capsys, core):
     core.pr_upsert.side_effect = CalledProcessError(
-        23, sentinel.cmd, b"output", b"errors"
+        23, sentinel_.cmd, b"output", b"errors"
     )
 
     with pytest.raises(CalledProcessError):
